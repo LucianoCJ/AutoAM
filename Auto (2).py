@@ -23,64 +23,46 @@ ws = wb.active
 
 
 # Establecer el ancho de las columnas
-ws.column_dimensions['A'].width = 3
-ws.column_dimensions['B'].width = 12 
-ws.column_dimensions['C'].width = 5     #COLUMNA 1
-ws.column_dimensions['D'].width = 8     #COLUMNA 2
-ws.column_dimensions['E'].width = 5     #COLUMNA 3
-ws.column_dimensions['G'].width = 10    #COLUMNA 4
+ws.column_dimensions['A'].width = 3 # CA
+ws.column_dimensions['B'].width = 8 # Market
+ws.column_dimensions['C'].width = 3 # Ind AM
+ws.column_dimensions['D'].width = 8 # Region
+ws.column_dimensions['E'].width = 8 # Month
+ws.column_dimensions['F'].width = 5 # Chg
+ws.column_dimensions['G'].width = 5 # 
 ws.column_dimensions['H'].width = 5    #COLUMNA 5
 ws.column_dimensions['I'].width = 5    #COLUMNA 6
 ws.column_dimensions['J'].width = 5     #COLUMNA 7
 ws.column_dimensions['K'].width = 5     #COLUMNA 8
 ws.column_dimensions['L'].width = 5     #COLUMNA 9
 ws.column_dimensions['M'].width = 5     #COLUMNA 10
-ws.column_dimensions['N'].width = 6     #COLUMNA 11
-ws.column_dimensions['O'].width = 8    #COLUMNA 12
-ws.column_dimensions['P'].width = 10    #COLUMNA 13
+
 
 # Establecer la altura deseada en la fila y columna especificada
-ws.row_dimensions[1].height = 20
+ws.row_dimensions[1].height = 18
 
 
 # Establecer el estilo de fuente y alineación
 header_font = Font(name='Calibri', size=6, bold=True)
-header_alignment = Alignment(horizontal='center', vertical='center')
-cell_font = Font(name='Calibri', size=6)
-cell_alignment = Alignment(horizontal='left', vertical='center')
 
 
 # Crear una lista con los nombres de las cabeceras
-cabeceras = ['CA', 'Market', 'Ind AM', 'Region', 'Month', 'Chg', 'Prev Ops', 'New Ops', 'Ops Chg', 'Prev Seat', 'New Seat', 'Sea Chg', '%_Seat Chg']
+cabeceras = ['CA', 'Market', 'Ind AM', 'Region', 'Month', 'Chg', 'Prev\nOps', 'New\nOps', 'Ops\nChg', 'Prev\nSeat', 'New\nSeat', 'Sea\nChg', '%_Seat\nChg']
 
-headers = cabeceras                             #Indico el número de columna a iniciar las cabeceras.
-for col_num, header_title in enumerate(headers, 3):
+#Indico el número de columna a iniciar las cabeceras
+for col_num, header_title in enumerate(cabeceras, 3):
     cell = ws.cell(row=1, column=col_num, value=header_title)
     cell.font = header_font
-    cell.alignment = header_alignment
-
-
-
-# Justifica el texto de los encabezados
-for cell in ws[1]:
-    cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
-    
+    cell.alignment = Alignment(horizontal='left' if col_num < 9 else 'center', vertical='center', wrap_text=True)
 
 # Escribir los datos                
 for row_num, row_data in enumerate(df.values, 2):
+    ws.row_dimensions[row_num].height = 10
     for col_num, cell_value in enumerate(row_data, 2):
         cell = ws.cell(row=row_num, column=col_num, value=cell_value)
-        cell.font = cell_font
-        cell.alignment = cell_alignment
+        cell.alignment = Alignment(horizontal='left' if col_num < 9 else 'right', vertical='center')
     if str(ws.cell(row=row_num, column=4).value) == 'nan':
         ws.delete_rows(row_num)
-
-
-
-
-
-
-
 
 
 # Cambiar el color de la celda A1 a rojo
@@ -110,27 +92,30 @@ for row_num, row_data in enumerate(df.values, 2):
 color1 = 'F2F2F2'
 color2 = 'FFFFFF'
 change = False
+bold = False
 
 
 # cambiar el formato de color de los renglones 
 for idx, row in enumerate(ws.iter_rows(),1):
-    if ((str(ws.cell(row=idx, column=3).value) == 'None') or (str(ws.cell(row=idx, column=4).value) == 'TOTAL')):
+    change = not change
+    value_third_column = str(ws.cell(row=idx, column=3).value)
+    value_fourth_column = str(ws.cell(row=idx, column=4).value)
+    will_bold = (value_fourth_column == 'TOTAL')
+
+    if ( value_third_column == 'None' or will_bold):
         fill = PatternFill(start_color=color2, end_color=color2, fill_type='solid')
         change = True              
-    elif change:
-        fill = PatternFill(start_color=color1, end_color=color1, fill_type='solid')
-        change = False                    
-    else:
-        fill = PatternFill(start_color=color2, end_color=color2, fill_type='solid')
-        change = True
+    color_fill = color2 if change else color1
     for cell in row:
-        cell.fill = fill
+        cell.font = Font(name='Calibri', size=6, bold = will_bold)
+        cell.fill = PatternFill(start_color=color_fill, end_color=color_fill, fill_type='solid')
 
 # Establecer color de relleno para los encabezados
 fill = PatternFill(start_color='BFBFBF', end_color='BFBFBF', fill_type='solid')
 
 # Justifica el texto de los encabezados
 for cell in ws[1]:
+    cell.font = header_font
     cell.fill = fill    #Agrego el color de relleno en el renglon 1
 
 
