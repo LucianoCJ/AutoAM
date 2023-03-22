@@ -94,7 +94,6 @@ color2 = 'FFFFFF'
 change = False
 bold = False
 
-
 # cambiar el formato de color de los renglones 
 for idx, row in enumerate(ws.iter_rows(),1):
     change = not change
