@@ -75,13 +75,6 @@ for row_num, row_data in enumerate(df.values, 2):
         ws.delete_rows(row_num)
 
 
-
-
-
-
-
-
-
 # Cambiar el color de la celda A1 a rojo
 
 #fill = PatternFill(start_color='808080', end_color='FFFFFF', fill_type='solid')
@@ -124,7 +117,7 @@ for idx, row in enumerate(ws.iter_rows(),1):
         change = True
     for cell in row:
         cell.fill = fill
-        
+
 # Poner el renglon de total en negritas y porcentajes negativos en rojo
 for idx, row in enumerate(ws.iter_rows(),1):
     if str(ws.cell(row=idx, column=4).value) == 'TOTAL':
@@ -133,7 +126,7 @@ for idx, row in enumerate(ws.iter_rows(),1):
         if re.search("-", str(ws.cell(row=idx, column=15).value)):
             ws.cell(row=idx, column=15).font = Font(color = "FF0000", name='Calibri', size=6, bold=True)
     elif re.search("-", str(ws.cell(row=idx, column=15).value)):
-         ws.cell(row=idx, column=15).font = Font(color = "FF0000", name='Calibri', size=6)
+        ws.cell(row=idx, column=15).font = Font(color = "FF0000", name='Calibri', size=6)
 
 columnaP = ws['C']
 columnaU = ws['O']
@@ -188,9 +181,6 @@ for cell in ws[1]:
       #              celda_individual.font = openpyxl.styles.Font(bold=True)
 
 
-
-
-
 #Convirtiendo a Decimales
 # Selecciona la columna que deseas convertir (por ejemplo, columna A)
 columna = ws['O']
@@ -201,7 +191,7 @@ for celda in columna:
         celda.value = celda.value * 1  # convierte el valor a porcentaje
         celda.number_format = '0%'  # establece el formato de número de la celda como porcentaje con dos decimales
     if (re.search("-", str(celda.value))):
-        celda.value = str(int(celda.value * 100)).replace('-','(') + ')%'
+        celda.value = str(int(celda.value * 100)).replace('-','(') + '%)'
 
 # Indicar el número de columna que deseas eliminar
 num_columna = 1
