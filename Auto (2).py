@@ -24,25 +24,23 @@ ws = wb.active
 
 
 # Establecer el ancho de las columnas
-ws.column_dimensions['A'].width = 3
-ws.column_dimensions['B'].width = 12 
-ws.column_dimensions['C'].width = 5     #COLUMNA 1
-ws.column_dimensions['D'].width = 8     #COLUMNA 2
-ws.column_dimensions['E'].width = 5     #COLUMNA 3
-ws.column_dimensions['G'].width = 10    #COLUMNA 4
-ws.column_dimensions['H'].width = 5    #COLUMNA 5
-ws.column_dimensions['I'].width = 5    #COLUMNA 6
-ws.column_dimensions['J'].width = 5     #COLUMNA 7
-ws.column_dimensions['K'].width = 5     #COLUMNA 8
-ws.column_dimensions['L'].width = 5     #COLUMNA 9
-ws.column_dimensions['M'].width = 5     #COLUMNA 10
-ws.column_dimensions['N'].width = 6     #COLUMNA 11
-ws.column_dimensions['O'].width = 8    #COLUMNA 12
-ws.column_dimensions['P'].width = 10    #COLUMNA 13
+ws.column_dimensions['A'].width = 3.9
+ws.column_dimensions['B'].width = 6.75 
+ws.column_dimensions['C'].width = 3.61     #COLUMNA 1
+ws.column_dimensions['D'].width = 7.32     #COLUMNA 2
+ws.column_dimensions['E'].width = 7.04     #COLUMNA 3
+ws.column_dimensions['F'].width = 4.32 
+ws.column_dimensions['G'].width = 4.32    #COLUMNA 4
+ws.column_dimensions['H'].width = 4.04    #COLUMNA 5
+ws.column_dimensions['I'].width = 3.89    #COLUMNA 6
+ws.column_dimensions['J'].width = 4.32     #COLUMNA 7
+ws.column_dimensions['K'].width = 4.18     #COLUMNA 8
+ws.column_dimensions['L'].width = 5.32     #COLUMNA 9
+ws.column_dimensions['M'].width = 6.04     #COLUMNA 10
+
 
 # Establecer la altura deseada en la fila y columna especificada
-ws.row_dimensions[1].height = 20
-
+ws.row_dimensions[1].height = 17.25
 
 # Establecer el estilo de fuente y alineación
 header_font = Font(name='Calibri', size=6, bold=True)
@@ -75,7 +73,8 @@ for row_num, row_data in enumerate(df.values, 2):
         ws.delete_rows(row_num)
 
 
-
+for idx, value in enumerate(ws.iter_rows(),2):
+    ws.row_dimensions[idx].height = 7.5
 
 
 
