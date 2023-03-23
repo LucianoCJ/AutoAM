@@ -59,16 +59,21 @@ for col_num, header_title in enumerate(headers, 3):
     cell.alignment = header_alignment
 
 # Justifica el texto de los encabezados
-for cell in ws[1]:
-    cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
-    
+for idx, cell in enumerate(ws[1],1):
+    if idx<9:  
+        cell.alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+    else:
+        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
 
 # Escribir los datos                
 for row_num, row_data in enumerate(df.values, 2):
     for col_num, cell_value in enumerate(row_data, 2):
         cell = ws.cell(row=row_num, column=col_num, value=cell_value)
         cell.font = cell_font
-        cell.alignment = cell_alignment
+        if col_num < 9:
+            cell.alignment = cell_alignment
+        else:
+             cell.alignment = Alignment(horizontal='right', vertical='center')
     if str(ws.cell(row=row_num, column=4).value) == 'nan':
         ws.delete_rows(row_num)
 
