@@ -14,14 +14,13 @@ import re
 
 
 # Leer el archivo CSV
-df = pd.read_csv('ReporteOAGUS_20230312.csv')
+df = pd.read_csv('ReporteOAGUS_20230312.csv', header = None)
 
 # Crear un nuevo libro de trabajo de Excel
 wb = Workbook()
 
 # Seleccionar la hoja activa
 ws = wb.active
-
 
 # Establecer el ancho de las columnas
 ws.column_dimensions['A'].width = 3.9
@@ -39,6 +38,7 @@ ws.column_dimensions['L'].width = 5.32     #COLUMNA 9
 ws.column_dimensions['M'].width = 6.04     #COLUMNA 10
 
 
+
 # Establecer la altura deseada en la fila y columna especificada
 ws.row_dimensions[1].height = 17.25
 
@@ -47,7 +47,6 @@ header_font = Font(name='Calibri', size=6, bold=True)
 header_alignment = Alignment(horizontal='center', vertical='center')
 cell_font = Font(name='Calibri', size=6)
 cell_alignment = Alignment(horizontal='left', vertical='center')
-
 
 # Crear una lista con los nombres de las cabeceras
 cabeceras = ['CA', 'Market', 'Ind AM', 'Region', 'Month', 'Chg', 'Prev Ops', 'New Ops', 'Ops Chg', 'Prev Seat', 'New Seat', 'Sea Chg', '%_Seat Chg']
@@ -65,6 +64,7 @@ for idx, cell in enumerate(ws[1],1):
     else:
         cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
 
+
 # Escribir los datos                
 for row_num, row_data in enumerate(df.values, 2):
     for col_num, cell_value in enumerate(row_data, 2):
@@ -73,10 +73,9 @@ for row_num, row_data in enumerate(df.values, 2):
         if col_num < 9:
             cell.alignment = cell_alignment
         else:
-             cell.alignment = Alignment(horizontal='right', vertical='center')
+            cell.alignment = Alignment(horizontal='right', vertical='center')
     if str(ws.cell(row=row_num, column=4).value) == 'nan':
         ws.delete_rows(row_num)
-
 
 for idx, value in enumerate(ws.iter_rows(),2):
     ws.row_dimensions[idx].height = 7.5
@@ -205,7 +204,7 @@ for celda in columna:
         celda.value = celda.value * 1  # convierte el valor a porcentaje
         celda.number_format = '0%'  # establece el formato de número de la celda como porcentaje con dos decimales
     if (re.search("-", str(celda.value))):
-        celda.value = str(int(celda.value * 100)).replace('-','(') + ')%'
+        celda.value = str(int(celda.value * 100)).replace('-','(') + '%)'
 
 # Indicar el número de columna que deseas eliminar
 num_columna = 1
