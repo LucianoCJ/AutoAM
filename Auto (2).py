@@ -1,14 +1,50 @@
+import csv
 import pandas as pd 
 import openpyxl
 from openpyxl import Workbook 
 from openpyxl.styles import Font, Alignment 
 from openpyxl.styles import PatternFill
+from openpyxl.styles import Border, Side
 from openpyxl import load_workbook
 from openpyxl.worksheet.page import PageMargins
 from openpyxl.utils import get_column_letter
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
+from openpyxl.chart import ScatterChart, Reference, Series
+from openpyxl.utils import range_boundaries
+from openpyxl.utils.cell import column_index_from_string
+from openpyxl.worksheet.pagebreak import Break
+import re
+import datetime
+import xlsxwriter
+
+
+##############################################################
+
+
+# Obtener la fecha del próximo domingo en curso
+today = datetime.date.today()
+#Domingo proximo
+next_sunday = today + datetime.timedelta(days=(6-today.weekday()+7)%7)
+#domingo anterior
+before_sunday = today - datetime.timedelta(days=today.weekday() + 1)
+#before_sunday = today - datetime.timedelta(days=(6-today.weekday()-7)%7)
+
+# Dar formato a la fecha como mes-día-año
+formatted_date = next_sunday.strftime("%b %dth, %Y")
+formatted_date2 = next_sunday.strftime("%b %dth")
+formatted_date3 = before_sunday.strftime("%b %dth")
+
+############################################################
+
+
+
+###############################################################################
+
+
+
+
 
 
 
@@ -59,8 +95,6 @@ for col_num, header_title in enumerate(headers, 3):
     cell.font = header_font
     cell.alignment = header_alignment
 
-
-
 # Justifica el texto de los encabezados
 for cell in ws[1]:
     cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
@@ -72,52 +106,71 @@ for row_num, row_data in enumerate(df.values, 2):
         cell = ws.cell(row=row_num, column=col_num, value=cell_value)
         cell.font = cell_font
         cell.alignment = cell_alignment
-
-
-
-
-
-
-
-
-
-
-
-# Cambiar el color de la celda A1 a rojo
-
-#fill = PatternFill(start_color='808080', end_color='FFFFFF', fill_type='solid')
-
-# Iterar sobre todas las filas y aplicar el formato de relleno al patrón especificado
-#for row in ws.iter_rows():
- #   if row[0].value == 'TOTAL':
-  #      cell_font = Font(bold = True)
-   #     for cell in row:
-    #        cell.fill = fill
-
-#color1 = 'BFBFBF' COLOR DE LA CABECERA
-
-
-# Seleccionar las celdas que se van a ajustar
-#cell_range = ws['I1:M1']
-
-# Ajustar el ancho de las columnas para que el texto quepa
-#for row in cell_range:
- #   for cell in row:
-  #      ws.column_dimensions[cell.column_letter].width = len(str(cell.value))
+    if str(ws.cell(row=row_num, column=4).value) == 'nan':
+        ws.delete_rows(row_num)
 
 
 # definir los colores para los renglones
 color1 = 'F2F2F2'
 color2 = 'FFFFFF'
+change = False
+
 
 # cambiar el formato de color de los renglones 
-for idx, row in enumerate(ws.iter_rows(),4):
-    if idx % 2 == 0:
+for idx, row in enumerate(ws.iter_rows(),1):
+    if ((str(ws.cell(row=idx, column=3).value) == 'None') or (str(ws.cell(row=idx, column=4).value) == 'TOTAL')):
+        fill = PatternFill(start_color=color2, end_color=color2, fill_type='solid')
+        change = True              
+    elif change:
         fill = PatternFill(start_color=color1, end_color=color1, fill_type='solid')
+        change = False                    
     else:
         fill = PatternFill(start_color=color2, end_color=color2, fill_type='solid')
+        change = True
     for cell in row:
         cell.fill = fill
+
+# Poner el renglon de total en negritas y porcentajes negativos en rojo
+for idx, row in enumerate(ws.iter_rows(),1):
+    if str(ws.cell(row=idx, column=4).value) == 'TOTAL':
+        for cell in row:
+            cell.font = Font(bold=True, name='Calibri', size=6)
+        if re.search("-", str(ws.cell(row=idx, column=15).value)):
+            ws.cell(row=idx, column=15).font = Font(color = "FF0000", name='Calibri', size=6, bold=True)
+    elif re.search("-", str(ws.cell(row=idx, column=15).value)):
+        ws.cell(row=idx, column=15).font = Font(color = "FF0000", name='Calibri', size=6)
+
+columnaP = ws['C']
+columnaU = ws['O']
+mexterior = Side(style = 'thin', color = 'BFBFBF')
+
+# Pintar los bordes verticales exteriores
+for celda in columnaP:
+    celda.border = Border(left = mexterior)
+for celda in columnaU:
+    celda.border = Border(right = mexterior)
+
+columnas = ['C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N']
+mnormal = Side(style = 'thin', color = 'F2F2F2')
+
+# Pintar los bordes verticales interiores
+for idx, value in enumerate(columnas,0):
+    for idxcelda, celda in enumerate(ws[columnas[idx]],0):
+        if idxcelda != 0:
+            celda.border = Border(right = mnormal)
+
+    
+#Pintar los bordes totales
+
+for idx, row in enumerate(ws.iter_rows(),1):
+    if str(ws.cell(row=idx, column=4).value) == 'TOTAL':
+        for idxcell, celda in enumerate(row,1):
+            if re.search("Cell 'Sheet'.C", str(celda)):
+                celda.border = Border(top = mnormal, bottom = mnormal, left = mexterior, right = mnormal)
+            elif re.search("Cell 'Sheet'.O", str(celda)):
+                celda.border = Border(top = mnormal, bottom = mnormal, left = mnormal, right = mexterior)
+            else:
+                celda.border = Border(top = mnormal, bottom = mnormal, left = mnormal, right = mnormal)
 
 
 # Establecer color de relleno para los encabezados
@@ -126,21 +179,6 @@ fill = PatternFill(start_color='BFBFBF', end_color='BFBFBF', fill_type='solid')
 # Justifica el texto de los encabezados
 for cell in ws[1]:
     cell.fill = fill    #Agrego el color de relleno en el renglon 1
-
-
-# Buscar la celda que contiene la palabra "TOTAL"
-#for fila in ws.rows:
- #   for celda in fila:
-  #      if celda.value == 'TOTAL':
-            # Obtener la fila donde se encuentra la celda
-   #         fila_total = celda.row
-            # Poner el texto en negrita en toda la fila
-    #        for celda_en_fila in ws[f'A{fila_total}:Z{fila_total}']:
-     #           for celda_individual in celda_en_fila:
-      #              celda_individual.font = openpyxl.styles.Font(bold=True)
-
-
-
 
 
 #Convirtiendo a Decimales
@@ -152,8 +190,62 @@ for celda in columna:
     if isinstance(celda.value, float):  # verifica si el valor de la celda es un decimal
         celda.value = celda.value * 1  # convierte el valor a porcentaje
         celda.number_format = '0%'  # establece el formato de número de la celda como porcentaje con dos decimales
+    if (re.search("-", str(celda.value))):
+        celda.value = str(int(celda.value * 100)).replace('-','(') + '%)'
 
 
+
+
+#################################################################################
+# Obtiene el número total de filas y columnas
+num_rows = ws.max_row
+num_cols = ws.max_column
+
+# Establecer el estilo de fuente y alineación para las cabeceras
+font = Font(name='Calibri', size=6, bold=True)
+alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+# Define el número de filas entre cada repetición de la cabecera
+n = 48
+
+# Itera a través de las filas y agrega las cabeceras cada n filas
+for i in range(1, num_rows + 1):
+    if (i - 1) % n == 0:
+         #Copia las celdas de la primera fila a la fila actual
+        for j in range(1, num_cols + 1 ):
+            cell = ws.cell(row=i, column=j)
+            header_cell = ws.cell(row=1, column=j)
+            cell.value = header_cell.value
+            cell.font = font
+            cell.alignment = alignment
+            cell.fill = fill    #Agrego el color de relleno en el renglon 1
+   
+# Establecer la fuente y alineación para la cabecera
+#font = Font(name='Arial', size=12, bold=True)
+#alignment = Alignment(horizontal='center')
+
+# Repetir las cabeceras cada 48 filas
+#for row in range(1, ws.max_row + 1):
+ #   if row == 1 or (row - 1) % 48 == 0:
+        # Agregar las cabeceras en la fila correspondiente
+  #      for col in range(1, ws.max_column + 1):
+   #         cell = ws.cell(row=row, column=col)
+    #        cell.value = 'Cabeceras {}'.format(get_column_letter(col))
+     #       cell.font = font
+      #      cell.alignment = alignment
+       #     cell.fill = fill    #Agrego el color de relleno en el renglon 1
+
+
+# Crear un objeto HeaderFooter y asignarle los textos
+#hf = HeaderFooter()
+#hf.center_header.text = "Encabezado"
+#hf.center_footer.text = "Pie de página"
+ws.oddHeader.center.text = "OAG Schedule Competitive Summary USA " + '\n&"Calibri"&8Sunday ' +  formatted_date
+ws.oddHeader.center.size = 14
+ws.oddHeader.center.font = "Calibri,Bold"
+
+ws.oddFooter.left.text = "Prev Snap:  " + formatted_date3 + " New Snap: " + formatted_date2 + '&R&"Calibri"&8&P - &N'
+ws.oddFooter.left.size = 8
+ws.oddHeader.left.font = "Calibri"
 
 
 # Indicar el número de columna que deseas eliminar
@@ -173,5 +265,46 @@ ws.delete_cols(num_columna19)
 
 # Guardar el archivo
 wb.save('archivo.xlsx')
+
+#############################################################################
+
+
+#workbook = xlsxwriter.Workbook('archivo.xlsx')
+#worksheet = workbook.get_worksheet_by_name('Sheet')
+
+
+
+#with open('ReporteOAGUS_20230312.csv', 'r') as f:
+ #   reader = csv.reader(f)
+  #  datos = [fila for fila in reader]
+
+# Crear archivo de salida  con cabeceras y pie de página
+#workbook = xlsxwriter.Workbook('archivoc.xlsx')
+#worksheet3 = workbook.get_worksheet_by_name('Sheet')
+#worksheet3 = workbook.add_worksheet('Data')
+
+#for i, fila in enumerate(datos):
+ #   for j, dato in enumerate(fila):
+  #      worksheet3.write(i, j, dato)
+
+
+#header3 = '&C&"Calibri,Bold"OAG Schedule Competitive Summary USA \n&C&"Calibri"Sunday,  ' + formatted_date
+#header4 = '\n&C&"Calibri"Sunday,  ' + formatted_date
+#footer3 = '&LPrev Snap: ' + 'New Snap: ' + formatted_date2 + '&R&N'
+
+#worksheet3.set_header(header3)
+#worksheet3.set_header(header4)
+#worksheet3.set_footer(footer3)
+
+#worksheet3.set_column('A:A', 50)
+#worksheet3.write('A1', preview)
+#worksheet3.write('A21', 'Next sheet')
+#worksheet3.set_h_pagebreaks([20])
+
+#worksheet1.write('A1', preview)
+
+# Cerrar el archivo
+#workbook.close()
+
 
 
