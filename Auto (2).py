@@ -11,6 +11,7 @@ from openpyxl.utils import get_column_letter
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
+<<<<<<< HEAD
 from openpyxl.chart import ScatterChart, Reference, Series
 from openpyxl.utils import range_boundaries
 from openpyxl.utils.cell import column_index_from_string
@@ -46,6 +47,9 @@ formatted_date3 = before_sunday.strftime("%b %dth")
 
 
 
+=======
+import re
+>>>>>>> 207545fe205124420c6fa79423da38381e4b22fb
 
 
 # Leer el archivo CSV
@@ -108,6 +112,32 @@ for row_num, row_data in enumerate(df.values, 2):
         cell.alignment = cell_alignment
     if str(ws.cell(row=row_num, column=4).value) == 'nan':
         ws.delete_rows(row_num)
+<<<<<<< HEAD
+=======
+
+
+# Cambiar el color de la celda A1 a rojo
+
+#fill = PatternFill(start_color='808080', end_color='FFFFFF', fill_type='solid')
+
+# Iterar sobre todas las filas y aplicar el formato de relleno al patrón especificado
+#for row in ws.iter_rows():
+ #   if row[0].value == 'TOTAL':
+  #      cell_font = Font(bold = True)
+   #     for cell in row:
+    #        cell.fill = fill
+
+#color1 = 'BFBFBF' COLOR DE LA CABECERA
+
+
+# Seleccionar las celdas que se van a ajustar
+#cell_range = ws['I1:M1']
+
+# Ajustar el ancho de las columnas para que el texto quepa
+#for row in cell_range:
+ #   for cell in row:
+  #      ws.column_dimensions[cell.column_letter].width = len(str(cell.value))
+>>>>>>> 207545fe205124420c6fa79423da38381e4b22fb
 
 
 # definir los colores para los renglones
@@ -181,6 +211,21 @@ for cell in ws[1]:
     cell.fill = fill    #Agrego el color de relleno en el renglon 1
 
 
+<<<<<<< HEAD
+=======
+# Buscar la celda que contiene la palabra "TOTAL"
+#for fila in ws.rows:
+ #   for celda in fila:
+  #      if celda.value == 'TOTAL':
+            # Obtener la fila donde se encuentra la celda
+   #         fila_total = celda.row
+            # Poner el texto en negrita en toda la fila
+    #        for celda_en_fila in ws[f'A{fila_total}:Z{fila_total}']:
+     #           for celda_individual in celda_en_fila:
+      #              celda_individual.font = openpyxl.styles.Font(bold=True)
+
+
+>>>>>>> 207545fe205124420c6fa79423da38381e4b22fb
 #Convirtiendo a Decimales
 # Selecciona la columna que deseas convertir (por ejemplo, columna A)
 columna = ws['O']
@@ -192,9 +237,12 @@ for celda in columna:
         celda.number_format = '0%'  # establece el formato de número de la celda como porcentaje con dos decimales
     if (re.search("-", str(celda.value))):
         celda.value = str(int(celda.value * 100)).replace('-','(') + '%)'
+<<<<<<< HEAD
 
 
 
+=======
+>>>>>>> 207545fe205124420c6fa79423da38381e4b22fb
 
 #################################################################################
 # Obtiene el número total de filas y columnas
@@ -265,6 +313,7 @@ ws.delete_cols(num_columna19)
 
 # Guardar el archivo
 wb.save('archivo.xlsx')
+<<<<<<< HEAD
 
 #############################################################################
 
@@ -308,3 +357,5 @@ wb.save('archivo.xlsx')
 
 
 
+=======
+>>>>>>> 207545fe205124420c6fa79423da38381e4b22fb
