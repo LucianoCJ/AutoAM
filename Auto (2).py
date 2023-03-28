@@ -1,24 +1,24 @@
-import csv
+#import csv
 import pandas as pd 
-import openpyxl
+import win32com.client
+#import openpyxl
 from openpyxl import Workbook 
 from openpyxl.styles import Font, Alignment 
 from openpyxl.styles import PatternFill
 from openpyxl.styles import Border, Side
-from openpyxl import load_workbook
-from openpyxl.worksheet.page import PageMargins
+#from openpyxl import load_workbook
+#from openpyxl.worksheet.page import PageMargins
 from openpyxl.utils import get_column_letter
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.units import inch
-from reportlab.pdfgen import canvas
-<<<<<<< HEAD
+#from reportlab.lib.pagesizes import letter
+#from reportlab.lib.units import inch
+#from reportlab.pdfgen import canvas
 from openpyxl.chart import ScatterChart, Reference, Series
 from openpyxl.utils import range_boundaries
 from openpyxl.utils.cell import column_index_from_string
-from openpyxl.worksheet.pagebreak import Break
+#from openpyxl.worksheet.pagebreak import Break
 import re
 import datetime
-import xlsxwriter
+#import xlsxwriter
 
 
 ##############################################################
@@ -36,6 +36,8 @@ before_sunday = today - datetime.timedelta(days=today.weekday() + 1)
 formatted_date = next_sunday.strftime("%b %dth, %Y")
 formatted_date2 = next_sunday.strftime("%b %dth")
 formatted_date3 = before_sunday.strftime("%b %dth")
+#Fecha del archivo
+formatted_date4 = next_sunday.strftime("%b%d%Y")
 
 ############################################################
 
@@ -47,20 +49,18 @@ formatted_date3 = before_sunday.strftime("%b %dth")
 
 
 
-=======
-import re
->>>>>>> 207545fe205124420c6fa79423da38381e4b22fb
 
 
-# Leer el archivo CSV
-df = pd.read_csv('ReporteOAGUS_20230312.csv')
+# Leer el archivo CSV desde el inicio
+df = pd.read_csv('ReporteOAGUS_20230312.csv', header = None)
 
 # Crear un nuevo libro de trabajo de Excel
 wb = Workbook()
 
 # Seleccionar la hoja activa
 ws = wb.active
-
+# Nombre de la hoja
+ws.title = 'Data'
 
 # Establecer el ancho de las columnas
 ws.column_dimensions['A'].width = 3
@@ -104,7 +104,10 @@ for cell in ws[1]:
     cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
     
 
-# Escribir los datos                
+
+
+
+ #Escribir los datos                
 for row_num, row_data in enumerate(df.values, 2):
     for col_num, cell_value in enumerate(row_data, 2):
         cell = ws.cell(row=row_num, column=col_num, value=cell_value)
@@ -112,32 +115,10 @@ for row_num, row_data in enumerate(df.values, 2):
         cell.alignment = cell_alignment
     if str(ws.cell(row=row_num, column=4).value) == 'nan':
         ws.delete_rows(row_num)
-<<<<<<< HEAD
-=======
 
 
-# Cambiar el color de la celda A1 a rojo
-
-#fill = PatternFill(start_color='808080', end_color='FFFFFF', fill_type='solid')
-
-# Iterar sobre todas las filas y aplicar el formato de relleno al patrón especificado
-#for row in ws.iter_rows():
- #   if row[0].value == 'TOTAL':
-  #      cell_font = Font(bold = True)
-   #     for cell in row:
-    #        cell.fill = fill
-
-#color1 = 'BFBFBF' COLOR DE LA CABECERA
 
 
-# Seleccionar las celdas que se van a ajustar
-#cell_range = ws['I1:M1']
-
-# Ajustar el ancho de las columnas para que el texto quepa
-#for row in cell_range:
- #   for cell in row:
-  #      ws.column_dimensions[cell.column_letter].width = len(str(cell.value))
->>>>>>> 207545fe205124420c6fa79423da38381e4b22fb
 
 
 # definir los colores para los renglones
@@ -211,21 +192,6 @@ for cell in ws[1]:
     cell.fill = fill    #Agrego el color de relleno en el renglon 1
 
 
-<<<<<<< HEAD
-=======
-# Buscar la celda que contiene la palabra "TOTAL"
-#for fila in ws.rows:
- #   for celda in fila:
-  #      if celda.value == 'TOTAL':
-            # Obtener la fila donde se encuentra la celda
-   #         fila_total = celda.row
-            # Poner el texto en negrita en toda la fila
-    #        for celda_en_fila in ws[f'A{fila_total}:Z{fila_total}']:
-     #           for celda_individual in celda_en_fila:
-      #              celda_individual.font = openpyxl.styles.Font(bold=True)
-
-
->>>>>>> 207545fe205124420c6fa79423da38381e4b22fb
 #Convirtiendo a Decimales
 # Selecciona la columna que deseas convertir (por ejemplo, columna A)
 columna = ws['O']
@@ -237,14 +203,12 @@ for celda in columna:
         celda.number_format = '0%'  # establece el formato de número de la celda como porcentaje con dos decimales
     if (re.search("-", str(celda.value))):
         celda.value = str(int(celda.value * 100)).replace('-','(') + '%)'
-<<<<<<< HEAD
 
 
 
-=======
->>>>>>> 207545fe205124420c6fa79423da38381e4b22fb
 
 #################################################################################
+# Repitiendo cabeceras        
 # Obtiene el número total de filas y columnas
 num_rows = ws.max_row
 num_cols = ws.max_column
@@ -253,41 +217,35 @@ num_cols = ws.max_column
 font = Font(name='Calibri', size=6, bold=True)
 alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
 # Define el número de filas entre cada repetición de la cabecera
-n = 48
+#n = 48
 
 # Itera a través de las filas y agrega las cabeceras cada n filas
-for i in range(1, num_rows + 1):
-    if (i - 1) % n == 0:
+#for i in range(1, num_rows + 1):
+    #if (i - 1) % n == 0:
          #Copia las celdas de la primera fila a la fila actual
-        for j in range(1, num_cols + 1 ):
-            cell = ws.cell(row=i, column=j)
-            header_cell = ws.cell(row=1, column=j)
+        #for j in range(1, num_cols + 1 ):
+for max_row in range(2, num_rows + 1):
+    if (max_row - 1) % 44 == 0: 
+        # Inserta una nueva fila en la parte superior de la página
+        ws.insert_rows(max_row)
+        for col_num in range(1, num_cols + 1):
+            cell = ws.cell(row=max_row, column=col_num)
+            cell_name =get_column_letter(col_num) + '1'
+            #header_cell = ws.cell(row=1, column=j)
+            header_cell = ws[cell_name]
             cell.value = header_cell.value
             cell.font = font
             cell.alignment = alignment
             cell.fill = fill    #Agrego el color de relleno en el renglon 1
-   
-# Establecer la fuente y alineación para la cabecera
-#font = Font(name='Arial', size=12, bold=True)
-#alignment = Alignment(horizontal='center')
 
-# Repetir las cabeceras cada 48 filas
-#for row in range(1, ws.max_row + 1):
- #   if row == 1 or (row - 1) % 48 == 0:
-        # Agregar las cabeceras en la fila correspondiente
-  #      for col in range(1, ws.max_column + 1):
-   #         cell = ws.cell(row=row, column=col)
-    #        cell.value = 'Cabeceras {}'.format(get_column_letter(col))
-     #       cell.font = font
-      #      cell.alignment = alignment
-       #     cell.fill = fill    #Agrego el color de relleno en el renglon 1
 
+################################################################################
 
 # Crear un objeto HeaderFooter y asignarle los textos
 #hf = HeaderFooter()
 #hf.center_header.text = "Encabezado"
 #hf.center_footer.text = "Pie de página"
-ws.oddHeader.center.text = "OAG Schedule Competitive Summary USA " + '\n&"Calibri"&8Sunday ' +  formatted_date
+ws.oddHeader.center.text = "OAG Schedule Competitive Summary US " + '\n&"Calibri"&8Sunday ' +  formatted_date
 ws.oddHeader.center.size = 14
 ws.oddHeader.center.font = "Calibri,Bold"
 
@@ -312,50 +270,28 @@ ws.delete_cols(num_columna18)
 ws.delete_cols(num_columna19)
 
 # Guardar el archivo
-wb.save('archivo.xlsx')
-<<<<<<< HEAD
+wb.save('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.xlsx')
 
 #############################################################################
 
-
-#workbook = xlsxwriter.Workbook('archivo.xlsx')
-#worksheet = workbook.get_worksheet_by_name('Sheet')
+#Convertir a PDF
 
 
+o = win32com.client.Dispatch("Excel.Application")
 
-#with open('ReporteOAGUS_20230312.csv', 'r') as f:
- #   reader = csv.reader(f)
-  #  datos = [fila for fila in reader]
+o.Visible = False
 
-# Crear archivo de salida  con cabeceras y pie de página
-#workbook = xlsxwriter.Workbook('archivoc.xlsx')
-#worksheet3 = workbook.get_worksheet_by_name('Sheet')
-#worksheet3 = workbook.add_worksheet('Data')
+wb_path = r'C:\Users\Shuai Shen\Downloads\py\OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.xlsx'
 
-#for i, fila in enumerate(datos):
- #   for j, dato in enumerate(fila):
-  #      worksheet3.write(i, j, dato)
+wb = o.Workbooks.Open(wb_path)
 
-
-#header3 = '&C&"Calibri,Bold"OAG Schedule Competitive Summary USA \n&C&"Calibri"Sunday,  ' + formatted_date
-#header4 = '\n&C&"Calibri"Sunday,  ' + formatted_date
-#footer3 = '&LPrev Snap: ' + 'New Snap: ' + formatted_date2 + '&R&N'
-
-#worksheet3.set_header(header3)
-#worksheet3.set_header(header4)
-#worksheet3.set_footer(footer3)
-
-#worksheet3.set_column('A:A', 50)
-#worksheet3.write('A1', preview)
-#worksheet3.write('A21', 'Next sheet')
-#worksheet3.set_h_pagebreaks([20])
-
-#worksheet1.write('A1', preview)
-
-# Cerrar el archivo
-#workbook.close()
+# Ubicación de salida del archivo PDF
+path_to_pdf = r'C:\Users\Shuai Shen\Downloads\py\OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.pdf'
 
 
 
-=======
->>>>>>> 207545fe205124420c6fa79423da38381e4b22fb
+#wb.WorkSheets(ws_index_list).Select()
+
+wb.ActiveSheet.ExportAsFixedFormat(0, path_to_pdf)
+
+wb.Close()
