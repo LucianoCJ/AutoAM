@@ -11,7 +11,8 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
 import re
-
+from xlsx2html import xlsx2html
+from weasyprint import HTML
 
 # Leer el archivo CSV
 df = pd.read_csv('ReporteOAGUS_20230312.csv', header = None)
@@ -76,6 +77,7 @@ for row_num, row_data in enumerate(df.values, 2):
             cell.alignment = Alignment(horizontal='right', vertical='center')
     if str(ws.cell(row=row_num, column=4).value) == 'nan':
         ws.delete_rows(row_num)
+        
 
 for idx, value in enumerate(ws.iter_rows(),2):
     ws.row_dimensions[idx].height = 7.5
@@ -142,12 +144,6 @@ columnaP = ws['C']
 columnaU = ws['O']
 mexterior = Side(style = 'thin', color = 'BFBFBF')
 
-# Pintar los bordes verticales exteriores
-for celda in columnaP:
-    celda.border = Border(left = mexterior)
-for celda in columnaU:
-    celda.border = Border(right = mexterior)
-
 columnas = ['C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N']
 mnormal = Side(style = 'thin', color = 'F2F2F2')
 
@@ -156,7 +152,6 @@ for idx, value in enumerate(columnas,0):
     for idxcelda, celda in enumerate(ws[columnas[idx]],0):
         if idxcelda != 0:
             celda.border = Border(right = mnormal)
-
     
 #Pintar los bordes totales
 
@@ -170,6 +165,11 @@ for idx, row in enumerate(ws.iter_rows(),1):
             else:
                 celda.border = Border(top = mnormal, bottom = mnormal, left = mnormal, right = mnormal)
 
+# Pintar los bordes verticales exteriores
+for celda in columnaP:
+    celda.border = Border(left = mexterior)
+for celda in columnaU:
+    celda.border = Border(right = mexterior)
 
 # Establecer color de relleno para los encabezados
 fill = PatternFill(start_color='BFBFBF', end_color='BFBFBF', fill_type='solid')
@@ -223,3 +223,6 @@ ws.delete_cols(num_columna19)
 
 # Guardar el archivo
 wb.save('archivo.xlsx')
+
+xlsx2html('archivo.xlsx', 'prueba.html')
+HTML('prueba.html').write_pdf('prueba.pdf')
