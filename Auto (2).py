@@ -152,7 +152,16 @@ for idx, value in enumerate(columnas,0):
     for idxcelda, celda in enumerate(ws[columnas[idx]],0):
         if idxcelda != 0:
             celda.border = Border(right = mnormal)
-    
+
+# Pintar los bordes verticales exteriores
+for idx, celda in enumerate(columnaP,1):
+    if idx == 1:
+        celda.border = Border(left = mexterior)
+    else:
+        celda.border = Border(left = mexterior, right = mnormal)
+for celda in columnaU:
+    celda.border = Border(right = mexterior)
+
 #Pintar los bordes totales
 
 for idx, row in enumerate(ws.iter_rows(),1):
@@ -165,11 +174,6 @@ for idx, row in enumerate(ws.iter_rows(),1):
             else:
                 celda.border = Border(top = mnormal, bottom = mnormal, left = mnormal, right = mnormal)
 
-# Pintar los bordes verticales exteriores
-for celda in columnaP:
-    celda.border = Border(left = mexterior)
-for celda in columnaU:
-    celda.border = Border(right = mexterior)
 
 # Establecer color de relleno para los encabezados
 fill = PatternFill(start_color='BFBFBF', end_color='BFBFBF', fill_type='solid')
