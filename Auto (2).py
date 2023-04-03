@@ -1,6 +1,5 @@
-#import csv
+
 import pandas as pd 
-import win32com.client
 #import openpyxl
 from openpyxl import Workbook 
 from openpyxl.styles import Font, Alignment 
@@ -18,8 +17,8 @@ from openpyxl.utils.cell import column_index_from_string
 #from openpyxl.worksheet.pagebreak import Break
 import re
 import datetime
-#import xlsxwriter
-
+from xlsx2html import xlsx2html
+from weasyprint import HTML
 
 ##############################################################
 
@@ -41,17 +40,7 @@ formatted_date4 = next_sunday.strftime("%b%d%Y")
 
 ############################################################
 
-
-
-###############################################################################
-
-
-
-
-
-
-
-# Leer el archivo CSV desde el inicio
+# Leer el archivo CSV
 df = pd.read_csv('ReporteOAGUS_20230312.csv', header = None)
 
 # Crear un nuevo libro de trabajo de Excel
@@ -59,36 +48,32 @@ wb = Workbook()
 
 # Seleccionar la hoja activa
 ws = wb.active
-# Nombre de la hoja
-ws.title = 'Data'
 
 # Establecer el ancho de las columnas
-ws.column_dimensions['A'].width = 3
-ws.column_dimensions['B'].width = 12 
-ws.column_dimensions['C'].width = 5     #COLUMNA 1
-ws.column_dimensions['D'].width = 8     #COLUMNA 2
-ws.column_dimensions['E'].width = 5     #COLUMNA 3
-ws.column_dimensions['G'].width = 10    #COLUMNA 4
-ws.column_dimensions['H'].width = 5    #COLUMNA 5
-ws.column_dimensions['I'].width = 5    #COLUMNA 6
-ws.column_dimensions['J'].width = 5     #COLUMNA 7
-ws.column_dimensions['K'].width = 5     #COLUMNA 8
-ws.column_dimensions['L'].width = 5     #COLUMNA 9
-ws.column_dimensions['M'].width = 5     #COLUMNA 10
-ws.column_dimensions['N'].width = 6     #COLUMNA 11
-ws.column_dimensions['O'].width = 8    #COLUMNA 12
-ws.column_dimensions['P'].width = 10    #COLUMNA 13
+ws.column_dimensions['A'].width = 3.9
+ws.column_dimensions['B'].width = 6.75 
+ws.column_dimensions['C'].width = 3.61     #COLUMNA 1
+ws.column_dimensions['D'].width = 7.32     #COLUMNA 2
+ws.column_dimensions['E'].width = 7.04     #COLUMNA 3
+ws.column_dimensions['F'].width = 4.32 
+ws.column_dimensions['G'].width = 4.32    #COLUMNA 4
+ws.column_dimensions['H'].width = 4.04    #COLUMNA 5
+ws.column_dimensions['I'].width = 3.89    #COLUMNA 6
+ws.column_dimensions['J'].width = 4.32     #COLUMNA 7
+ws.column_dimensions['K'].width = 4.18     #COLUMNA 8
+ws.column_dimensions['L'].width = 5.32     #COLUMNA 9
+ws.column_dimensions['M'].width = 6.04     #COLUMNA 10
+
+
 
 # Establecer la altura deseada en la fila y columna especificada
-ws.row_dimensions[1].height = 20
-
+ws.row_dimensions[1].height = 17.25
 
 # Establecer el estilo de fuente y alineación
 header_font = Font(name='Calibri', size=6, bold=True)
 header_alignment = Alignment(horizontal='center', vertical='center')
 cell_font = Font(name='Calibri', size=6)
 cell_alignment = Alignment(horizontal='left', vertical='center')
-
 
 # Crear una lista con los nombres de las cabeceras
 cabeceras = ['CA', 'Market', 'Ind AM', 'Region', 'Month', 'Chg', 'Prev Ops', 'New Ops', 'Ops Chg', 'Prev Seat', 'New Seat', 'Sea Chg', '%_Seat Chg']
@@ -100,25 +85,55 @@ for col_num, header_title in enumerate(headers, 3):
     cell.alignment = header_alignment
 
 # Justifica el texto de los encabezados
-for cell in ws[1]:
-    cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
-    
+for idx, cell in enumerate(ws[1],1):
+    if idx<9:  
+        cell.alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+    else:
+        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
 
 
-
-
- #Escribir los datos                
+# Escribir los datos                
 for row_num, row_data in enumerate(df.values, 2):
     for col_num, cell_value in enumerate(row_data, 2):
         cell = ws.cell(row=row_num, column=col_num, value=cell_value)
         cell.font = cell_font
-        cell.alignment = cell_alignment
+        if col_num < 9:
+            cell.alignment = cell_alignment
+        else:
+            cell.alignment = Alignment(horizontal='right', vertical='center')
     if str(ws.cell(row=row_num, column=4).value) == 'nan':
         ws.delete_rows(row_num)
+        
+
+for idx, value in enumerate(ws.iter_rows(),2):
+    ws.row_dimensions[idx].height = 7.5
 
 
 
 
+
+
+# Cambiar el color de la celda A1 a rojo
+
+#fill = PatternFill(start_color='808080', end_color='FFFFFF', fill_type='solid')
+
+# Iterar sobre todas las filas y aplicar el formato de relleno al patrón especificado
+#for row in ws.iter_rows():
+ #   if row[0].value == 'TOTAL':
+  #      cell_font = Font(bold = True)
+   #     for cell in row:
+    #        cell.fill = fill
+
+#color1 = 'BFBFBF' COLOR DE LA CABECERA
+
+
+# Seleccionar las celdas que se van a ajustar
+#cell_range = ws['I1:M1']
+
+# Ajustar el ancho de las columnas para que el texto quepa
+#for row in cell_range:
+ #   for cell in row:
+  #      ws.column_dimensions[cell.column_letter].width = len(str(cell.value))
 
 
 # definir los colores para los renglones
@@ -140,7 +155,7 @@ for idx, row in enumerate(ws.iter_rows(),1):
         change = True
     for cell in row:
         cell.fill = fill
-
+        
 # Poner el renglon de total en negritas y porcentajes negativos en rojo
 for idx, row in enumerate(ws.iter_rows(),1):
     if str(ws.cell(row=idx, column=4).value) == 'TOTAL':
@@ -149,17 +164,11 @@ for idx, row in enumerate(ws.iter_rows(),1):
         if re.search("-", str(ws.cell(row=idx, column=15).value)):
             ws.cell(row=idx, column=15).font = Font(color = "FF0000", name='Calibri', size=6, bold=True)
     elif re.search("-", str(ws.cell(row=idx, column=15).value)):
-        ws.cell(row=idx, column=15).font = Font(color = "FF0000", name='Calibri', size=6)
+         ws.cell(row=idx, column=15).font = Font(color = "FF0000", name='Calibri', size=6)
 
 columnaP = ws['C']
 columnaU = ws['O']
 mexterior = Side(style = 'thin', color = 'BFBFBF')
-
-# Pintar los bordes verticales exteriores
-for celda in columnaP:
-    celda.border = Border(left = mexterior)
-for celda in columnaU:
-    celda.border = Border(right = mexterior)
 
 columnas = ['C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N']
 mnormal = Side(style = 'thin', color = 'F2F2F2')
@@ -170,7 +179,15 @@ for idx, value in enumerate(columnas,0):
         if idxcelda != 0:
             celda.border = Border(right = mnormal)
 
-    
+# Pintar los bordes verticales exteriores
+for idx, celda in enumerate(columnaP,1):
+    if idx == 1:
+        celda.border = Border(left = mexterior)
+    else:
+        celda.border = Border(left = mexterior, right = mnormal)
+for celda in columnaU:
+    celda.border = Border(right = mexterior)
+
 #Pintar los bordes totales
 
 for idx, row in enumerate(ws.iter_rows(),1):
@@ -192,6 +209,21 @@ for cell in ws[1]:
     cell.fill = fill    #Agrego el color de relleno en el renglon 1
 
 
+# Buscar la celda que contiene la palabra "TOTAL"
+#for fila in ws.rows:
+ #   for celda in fila:
+  #      if celda.value == 'TOTAL':
+            # Obtener la fila donde se encuentra la celda
+   #         fila_total = celda.row
+            # Poner el texto en negrita en toda la fila
+    #        for celda_en_fila in ws[f'A{fila_total}:Z{fila_total}']:
+     #           for celda_individual in celda_en_fila:
+      #              celda_individual.font = openpyxl.styles.Font(bold=True)
+
+
+
+
+
 #Convirtiendo a Decimales
 # Selecciona la columna que deseas convertir (por ejemplo, columna A)
 columna = ws['O']
@@ -203,9 +235,6 @@ for celda in columna:
         celda.number_format = '0%'  # establece el formato de número de la celda como porcentaje con dos decimales
     if (re.search("-", str(celda.value))):
         celda.value = str(int(celda.value * 100)).replace('-','(') + '%)'
-
-
-
 
 #################################################################################
 # Repitiendo cabeceras        
@@ -272,26 +301,5 @@ ws.delete_cols(num_columna19)
 # Guardar el archivo
 wb.save('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.xlsx')
 
-#############################################################################
-
-#Convertir a PDF
-
-
-o = win32com.client.Dispatch("Excel.Application")
-
-o.Visible = False
-
-wb_path = r'C:\Users\Shuai Shen\Downloads\py\OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.xlsx'
-
-wb = o.Workbooks.Open(wb_path)
-
-# Ubicación de salida del archivo PDF
-path_to_pdf = r'C:\Users\Shuai Shen\Downloads\py\OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.pdf'
-
-
-
-#wb.WorkSheets(ws_index_list).Select()
-
-wb.ActiveSheet.ExportAsFixedFormat(0, path_to_pdf)
-
-wb.Close()
+xlsx2html('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.xlsx', 'OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.html')
+HTML('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.html').write_pdf('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.pdf')
