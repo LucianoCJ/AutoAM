@@ -1,18 +1,44 @@
+
 import pandas as pd 
-import openpyxl
+#import openpyxl
 from openpyxl import Workbook 
 from openpyxl.styles import Font, Alignment 
 from openpyxl.styles import PatternFill
 from openpyxl.styles import Border, Side
-from openpyxl import load_workbook
-from openpyxl.worksheet.page import PageMargins
+#from openpyxl import load_workbook
+#from openpyxl.worksheet.page import PageMargins
 from openpyxl.utils import get_column_letter
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.units import inch
-from reportlab.pdfgen import canvas
+#from reportlab.lib.pagesizes import letter
+#from reportlab.lib.units import inch
+#from reportlab.pdfgen import canvas
+from openpyxl.chart import ScatterChart, Reference, Series
+from openpyxl.utils import range_boundaries
+from openpyxl.utils.cell import column_index_from_string
+#from openpyxl.worksheet.pagebreak import Break
 import re
+import datetime
 from xlsx2html import xlsx2html
 from weasyprint import HTML
+
+##############################################################
+
+
+# Obtener la fecha del próximo domingo en curso
+today = datetime.date.today()
+#Domingo proximo
+next_sunday = today + datetime.timedelta(days=(6-today.weekday()+7)%7)
+#domingo anterior
+before_sunday = today - datetime.timedelta(days=today.weekday() + 1)
+#before_sunday = today - datetime.timedelta(days=(6-today.weekday()-7)%7)
+
+# Dar formato a la fecha como mes-día-año
+formatted_date = next_sunday.strftime("%b %dth, %Y")
+formatted_date2 = next_sunday.strftime("%b %dth")
+formatted_date3 = before_sunday.strftime("%b %dth")
+#Fecha del archivo
+formatted_date4 = next_sunday.strftime("%b%d%Y")
+
+############################################################
 
 # Leer el archivo CSV
 df = pd.read_csv('ReporteOAGUS_20230312.csv', header = None)
@@ -210,6 +236,53 @@ for celda in columna:
     if (re.search("-", str(celda.value))):
         celda.value = str(int(celda.value * 100)).replace('-','(') + '%)'
 
+#################################################################################
+# Repitiendo cabeceras        
+# Obtiene el número total de filas y columnas
+num_rows = ws.max_row
+num_cols = ws.max_column
+
+# Establecer el estilo de fuente y alineación para las cabeceras
+font = Font(name='Calibri', size=6, bold=True)
+alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+# Define el número de filas entre cada repetición de la cabecera
+#n = 48
+
+# Itera a través de las filas y agrega las cabeceras cada n filas
+#for i in range(1, num_rows + 1):
+    #if (i - 1) % n == 0:
+         #Copia las celdas de la primera fila a la fila actual
+        #for j in range(1, num_cols + 1 ):
+for max_row in range(2, num_rows + 1):
+    if (max_row - 1) % 44 == 0: 
+        # Inserta una nueva fila en la parte superior de la página
+        ws.insert_rows(max_row)
+        for col_num in range(1, num_cols + 1):
+            cell = ws.cell(row=max_row, column=col_num)
+            cell_name =get_column_letter(col_num) + '1'
+            #header_cell = ws.cell(row=1, column=j)
+            header_cell = ws[cell_name]
+            cell.value = header_cell.value
+            cell.font = font
+            cell.alignment = alignment
+            cell.fill = fill    #Agrego el color de relleno en el renglon 1
+
+
+################################################################################
+
+# Crear un objeto HeaderFooter y asignarle los textos
+#hf = HeaderFooter()
+#hf.center_header.text = "Encabezado"
+#hf.center_footer.text = "Pie de página"
+ws.oddHeader.center.text = "OAG Schedule Competitive Summary US " + '\n&"Calibri"&8Sunday ' +  formatted_date
+ws.oddHeader.center.size = 14
+ws.oddHeader.center.font = "Calibri,Bold"
+
+ws.oddFooter.left.text = "Prev Snap:  " + formatted_date3 + " New Snap: " + formatted_date2 + '&R&"Calibri"&8&P - &N'
+ws.oddFooter.left.size = 8
+ws.oddHeader.left.font = "Calibri"
+
+
 # Indicar el número de columna que deseas eliminar
 num_columna = 1
 num_columna2 = 1
@@ -226,7 +299,7 @@ ws.delete_cols(num_columna18)
 ws.delete_cols(num_columna19)
 
 # Guardar el archivo
-wb.save('archivo.xlsx')
+wb.save('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.xlsx')
 
-xlsx2html('archivo.xlsx', 'prueba.html')
-HTML('prueba.html').write_pdf('prueba.pdf')
+xlsx2html('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.xlsx', 'OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.html')
+HTML('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.html').write_pdf('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.pdf')
