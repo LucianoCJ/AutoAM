@@ -23,5 +23,6 @@ pip install pywin32
 
 * xlsx2html
 Librería en Python que nos permite exportar archivo xlsx a html.
+Latest version: 0.4.2 Publicación: 20 mar 2023
 
 pip install xlsx2html
