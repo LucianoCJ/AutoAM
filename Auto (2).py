@@ -1,22 +1,13 @@
-
 import pandas as pd 
-#import openpyxl
+import re
+import datetime
+import PyPDF2
 from openpyxl import Workbook 
 from openpyxl.styles import Font, Alignment 
 from openpyxl.styles import PatternFill
 from openpyxl.styles import Border, Side
-#from openpyxl import load_workbook
-#from openpyxl.worksheet.page import PageMargins
 from openpyxl.utils import get_column_letter
-#from reportlab.lib.pagesizes import letter
-#from reportlab.lib.units import inch
-#from reportlab.pdfgen import canvas
-from openpyxl.chart import ScatterChart, Reference, Series
-from openpyxl.utils import range_boundaries
-from openpyxl.utils.cell import column_index_from_string
-#from openpyxl.worksheet.pagebreak import Break
-import re
-import datetime
+from openpyxl.worksheet.page import PageMargins
 from xlsx2html import xlsx2html
 from weasyprint import HTML
 
@@ -32,9 +23,12 @@ before_sunday = today - datetime.timedelta(days=today.weekday() + 1)
 #before_sunday = today - datetime.timedelta(days=(6-today.weekday()-7)%7)
 
 # Dar formato a la fecha como mes-día-año
-formatted_date = next_sunday.strftime("%b %dth, %Y")
-formatted_date2 = next_sunday.strftime("%b %dth")
-formatted_date3 = before_sunday.strftime("%b %dth")
+formatted_date = today.strftime("%b %d, %Y").replace("{0:0>2}".format(today.day), str(today.day) + ("th" if 11<= today.day <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(today.day % 10, 'th')))
+formatted_date2 = next_sunday.strftime("%b %d").replace("{0:0>2}".format(next_sunday.day), str(next_sunday.day) + ("th" if 11<= next_sunday.day <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(next_sunday.day % 10, 'th')))
+
+formatted_date3 = before_sunday.strftime("%b %d").replace("{0:0>2}".format(before_sunday.day), str(before_sunday.day) + ("th" if 11<= before_sunday.day <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(before_sunday.day % 10, 'th')))
+
+
 #Fecha del archivo
 formatted_date4 = next_sunday.strftime("%b%d%Y")
 
@@ -48,6 +42,11 @@ wb = Workbook()
 
 # Seleccionar la hoja activa
 ws = wb.active
+
+# Definir el tamaño de hoja tamaño Carta
+ws.page_setup.paperSize = ws.PAPERSIZE_LETTER
+# Nombre de la hoja
+ws.title = 'Data'
 
 # Establecer el ancho de las columnas
 ws.column_dimensions['A'].width = 3.9
@@ -65,6 +64,23 @@ ws.column_dimensions['L'].width = 5.32     #COLUMNA 9
 ws.column_dimensions['M'].width = 6.04     #COLUMNA 10
 
 
+# Definiendo los nuevos margenes modificar los margenes en pulgadas a cm.
+nuevos_margenes = PageMargins(left = 0.23622047244094, right = 0.23622047244094, top = 0.86614173228346, bottom = 0.74803149606299, header = 0.31496062992126, footer = 0.31496062992126)
+
+
+# Actualizando los margenes de la hoja de trabajo
+ws.page_margins = nuevos_margenes
+
+#ws.page_margins.left = 0.23 # = 0.6 pulgadas
+#ws.page_margins.right = 0.23 # = 0.6
+#ws.page_margins.top = 0.86 # = 2.2
+#ws.page_margins.bottom = 0.74 # = 1.9
+#ws.page_margins.header = 0.314 # = 0.8
+#ws.page_margins.footer = 0.314 # = 0.8
+
+# Centrar los márgenes horizontal y verticalmente y activa las opciones de impresión
+ws.print_options.horizontalCentered = True
+ws.print_options.verticalCentered = True
 
 # Establecer la altura deseada en la fila y columna especificada
 ws.row_dimensions[1].height = 17.25
@@ -105,35 +121,13 @@ for row_num, row_data in enumerate(df.values, 2):
         ws.delete_rows(row_num)
         
 
+# Formato de tamaño a todas las celdas
+
 for idx, value in enumerate(ws.iter_rows(),2):
     ws.row_dimensions[idx].height = 7.5
 
 
 
-
-
-
-# Cambiar el color de la celda A1 a rojo
-
-#fill = PatternFill(start_color='808080', end_color='FFFFFF', fill_type='solid')
-
-# Iterar sobre todas las filas y aplicar el formato de relleno al patrón especificado
-#for row in ws.iter_rows():
- #   if row[0].value == 'TOTAL':
-  #      cell_font = Font(bold = True)
-   #     for cell in row:
-    #        cell.fill = fill
-
-#color1 = 'BFBFBF' COLOR DE LA CABECERA
-
-
-# Seleccionar las celdas que se van a ajustar
-#cell_range = ws['I1:M1']
-
-# Ajustar el ancho de las columnas para que el texto quepa
-#for row in cell_range:
- #   for cell in row:
-  #      ws.column_dimensions[cell.column_letter].width = len(str(cell.value))
 
 
 # definir los colores para los renglones
@@ -164,7 +158,7 @@ for idx, row in enumerate(ws.iter_rows(),1):
         if re.search("-", str(ws.cell(row=idx, column=15).value)):
             ws.cell(row=idx, column=15).font = Font(color = "FF0000", name='Calibri', size=6, bold=True)
     elif re.search("-", str(ws.cell(row=idx, column=15).value)):
-         ws.cell(row=idx, column=15).font = Font(color = "FF0000", name='Calibri', size=6)
+        ws.cell(row=idx, column=15).font = Font(color = "FF0000", name='Calibri', size=6)
 
 columnaP = ws['C']
 columnaU = ws['O']
@@ -209,21 +203,6 @@ for cell in ws[1]:
     cell.fill = fill    #Agrego el color de relleno en el renglon 1
 
 
-# Buscar la celda que contiene la palabra "TOTAL"
-#for fila in ws.rows:
- #   for celda in fila:
-  #      if celda.value == 'TOTAL':
-            # Obtener la fila donde se encuentra la celda
-   #         fila_total = celda.row
-            # Poner el texto en negrita en toda la fila
-    #        for celda_en_fila in ws[f'A{fila_total}:Z{fila_total}']:
-     #           for celda_individual in celda_en_fila:
-      #              celda_individual.font = openpyxl.styles.Font(bold=True)
-
-
-
-
-
 #Convirtiendo a Decimales
 # Selecciona la columna que deseas convertir (por ejemplo, columna A)
 columna = ws['O']
@@ -254,9 +233,14 @@ alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
          #Copia las celdas de la primera fila a la fila actual
         #for j in range(1, num_cols + 1 ):
 for max_row in range(2, num_rows + 1):
-    if (max_row - 1) % 44 == 0: 
+    if (max_row - 1) % 79 == 0: #Numero de renglones que itera as las cabeceras
+
+         # Establece la altura de la nueva fila
+        ws.row_dimensions[max_row].height = 17.25
         # Inserta una nueva fila en la parte superior de la página
         ws.insert_rows(max_row)
+       
+
         for col_num in range(1, num_cols + 1):
             cell = ws.cell(row=max_row, column=col_num)
             cell_name =get_column_letter(col_num) + '1'
@@ -266,7 +250,15 @@ for max_row in range(2, num_rows + 1):
             cell.font = font
             cell.alignment = alignment
             cell.fill = fill    #Agrego el color de relleno en el renglon 1
+            #ws.row_dimensions(col_num).height = 17.25
 
+
+
+
+
+#for idx, value in enumerate(ws.iter_rows(),2):
+ #   if value[0].value not in cabeceras:
+  #      ws.row_dimensions[idx].height = 7.5
 
 ################################################################################
 
@@ -274,13 +266,13 @@ for max_row in range(2, num_rows + 1):
 #hf = HeaderFooter()
 #hf.center_header.text = "Encabezado"
 #hf.center_footer.text = "Pie de página"
-ws.oddHeader.center.text = "OAG Schedule Competitive Summary US " + '\n&"Calibri"&8Sunday ' +  formatted_date
-ws.oddHeader.center.size = 14
-ws.oddHeader.center.font = "Calibri,Bold"
+ws.oddHeader.center.text = "&14OAG Schedule Competitive Summary USA " + '\n&"Calibri(Cuerpo)"&9Sunday ' +  formatted_date
+#ws.oddHeader.center.size = 14
+ws.oddHeader.center.font = "Calibri(Cuerpo)"
 
-ws.oddFooter.left.text = "Prev Snap:  " + formatted_date3 + " New Snap: " + formatted_date2 + '&R&"Calibri"&8&P - &N'
+ws.oddFooter.left.text = "Prev Snap:  " + formatted_date3 + " New Snap: " + formatted_date2 + '&R&"Calibri(Cuerpo)"&8&P - &N'
 ws.oddFooter.left.size = 8
-ws.oddHeader.left.font = "Calibri"
+ws.oddHeader.left.font = "Calibri(Cuerpo)"
 
 
 # Indicar el número de columna que deseas eliminar
@@ -298,8 +290,49 @@ ws.delete_cols(num_columna17)
 ws.delete_cols(num_columna18)
 ws.delete_cols(num_columna19)
 
-# Guardar el archivo
-wb.save('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.xlsx')
 
-xlsx2html('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.xlsx', 'OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.html')
-HTML('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.html').write_pdf('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.pdf')
+# Guardar el archivo con modificación de scale al 110%
+#ws.sheet_view.zoom = 110
+ws.page_setup.scale = 110
+
+
+
+
+# Guardar el archivo
+wb.save('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' USA.xlsx')
+
+
+
+xlsx2html('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' USA.xlsx', 'OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' USA.html')
+
+#with open('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' USA.html', 'r') as f:
+ #   html_data = f.read()
+
+#header = '<div class"header">"&14OAG Schedule Competitive Summary USA "  +  formatted_date</div>'
+#footer = '<div class"header">"&14OAG Schedule Competitive Summary USA "  +  formatted_date</div>'
+
+#html_data = header+ html_data + footer
+
+#with open('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' USA.html', 'w') as f:
+ #   f.write(html_data)
+
+
+HTML('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' USA.html').write_pdf('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' USA.pdf')
+
+pdf_file = open('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' USA.pdf', 'rb')
+pdf_reader = PyPDF2.PdfReader(pdf_file)
+
+pdf_write = PyPDF2.PdfFileWriter()
+
+header = "&14OAG Schedule Competitive Summary USA " + '\n&"Calibri(Cuerpo)"&9Sunday ' +  formatted_date
+
+for page_num in range (pdf_reader.numPages):
+    page = pdf_reader.getPage(page_num)
+    page.mergePage(header)
+    pdf_write.addPage(page)
+
+pdf_output = open('archivo.pdf', 'rb')
+pdf_write.write(pdf_output)
+
+pdf_file.close()
+pdf_output.close()
