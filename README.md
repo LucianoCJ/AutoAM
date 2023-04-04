@@ -20,3 +20,8 @@ Es una librería para Python que nos permite interactuar y manipular funciones d
 Latest version: 306 Release date:March 25, 2023
 
 pip install pywin32
+
+* xlsx2html
+Librería en Python que nos permite exportar archivo xlsx a html.
+
+pip install xlsx2html
