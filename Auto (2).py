@@ -319,20 +319,3 @@ xlsx2html('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' USA.x
 
 HTML('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' USA.html').write_pdf('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' USA.pdf')
 
-pdf_file = open('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' USA.pdf', 'rb')
-pdf_reader = PyPDF2.PdfReader(pdf_file)
-
-pdf_write = PyPDF2.PdfFileWriter()
-
-header = "&14OAG Schedule Competitive Summary USA " + '\n&"Calibri(Cuerpo)"&9Sunday ' +  formatted_date
-
-for page_num in range (pdf_reader.numPages):
-    page = pdf_reader.getPage(page_num)
-    page.mergePage(header)
-    pdf_write.addPage(page)
-
-pdf_output = open('archivo.pdf', 'rb')
-pdf_write.write(pdf_output)
-
-pdf_file.close()
-pdf_output.close()
