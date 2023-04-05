@@ -1,6 +1,6 @@
 # Programa en Python de Auto en proceso para AM.
 
-Antes de ejecutar necesitamos instalar algunas librerías, acontinuación ejecutamos los siguientes comandos para su instalación.
+Antes de ejecutar necesitamos instalar algunas librerías en sistema operativo Windows, acontinuación ejecutamos los siguientes comandos para su instalación.
 
 * pandas 
 Se especializa en el manejo, análisis y procesamiento de datos
@@ -33,3 +33,11 @@ Latest version: 0.4.2 Publicación: 20 mar 2023
 ```bash
 pip install xlsx2html
 ```
+* weasyprint
+Latest version: 58.1 Publicación: 20 mar 2023
+
+```bash
+pip install weasyprint
+```
+
+
