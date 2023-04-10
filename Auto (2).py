@@ -1,6 +1,7 @@
 import pandas as pd 
 import re
 import datetime
+import time
 import PyPDF2
 from openpyxl import Workbook 
 from openpyxl.styles import Font, Alignment 
@@ -13,6 +14,8 @@ from weasyprint import HTML
 
 ##############################################################
 
+# Inicio de tiempo de ejecución
+start_time = time.time()
 
 # Obtener la fecha del próximo domingo en curso
 today = datetime.date.today()
@@ -35,7 +38,7 @@ formatted_date4 = next_sunday.strftime("%b%d%Y")
 ############################################################
 
 # Leer el archivo CSV
-df = pd.read_csv('ReporteOAGUS_20230312.csv', header = None)
+df = pd.read_csv('ReporteOAGUS_20230305.csv', header = None)
 
 # Crear un nuevo libro de trabajo de Excel
 wb = Workbook()
@@ -123,8 +126,8 @@ for row_num, row_data in enumerate(df.values, 2):
 
 # Formato de tamaño a todas las celdas
 
-for idx, value in enumerate(ws.iter_rows(),2):
-    ws.row_dimensions[idx].height = 7.5
+#for idx, value in enumerate(ws.iter_rows(),2):
+ #   ws.row_dimensions[idx].height = 7.5
 
 
 
@@ -234,12 +237,12 @@ alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
         #for j in range(1, num_cols + 1 ):
 for max_row in range(2, num_rows + 1):
     if (max_row - 1) % 79 == 0: #Numero de renglones que itera as las cabeceras
-
-         # Establece la altura de la nueva fila
-        ws.row_dimensions[max_row].height = 17.25
-        # Inserta una nueva fila en la parte superior de la página
+        #if max_row <= num_rows:
+            # Establece la altura de la nueva fila
+        #ws.row_dimensions[max_row].height = 17.25
+            # Inserta una nueva fila en la parte superior de la página
         ws.insert_rows(max_row)
-       
+        
 
         for col_num in range(1, num_cols + 1):
             cell = ws.cell(row=max_row, column=col_num)
@@ -250,10 +253,23 @@ for max_row in range(2, num_rows + 1):
             cell.font = font
             cell.alignment = alignment
             cell.fill = fill    #Agrego el color de relleno en el renglon 1
-            #ws.row_dimensions(col_num).height = 17.25
+                #ws.row_dimensions(col_num).height = 17.25
+    
+    
 
 
+# Formato de tamaño a todas las celdas
 
+for idx, value in enumerate(ws.iter_rows(),2):
+    ws.row_dimensions[idx].height = 7.5
+    
+        #idx += 2
+
+for row in ws.iter_rows(): # Itera a través de todas las filas y celdas del workbook
+    for cell in row:
+        if cell.value in cabeceras:  # Comprueba si elvalor de la celda corresponde a la cabecera. 
+            row_num =  cell.row # obtenemos el número de la fila.
+            ws.row_dimensions[row_num].height = 17.25 # Modificamos la altura de la fila.
 
 
 #for idx, value in enumerate(ws.iter_rows(),2):
@@ -301,21 +317,18 @@ ws.page_setup.scale = 110
 # Guardar el archivo
 wb.save('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' USA.xlsx')
 
+#Tiempo final de ejecución
+end_time = time.time()
+
+# Diferencia de tiempo
+execution_time = end_time - start_time
+
+print("Tiempo de ejecución fue de ", execution_time, "segundos.")
+
+# Archivo en HTML
+
+#xlsx2html('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' USA.xlsx', 'OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' USA.html')
 
 
-xlsx2html('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' USA.xlsx', 'OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' USA.html')
-
-#with open('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' USA.html', 'r') as f:
- #   html_data = f.read()
-
-#header = '<div class"header">"&14OAG Schedule Competitive Summary USA "  +  formatted_date</div>'
-#footer = '<div class"header">"&14OAG Schedule Competitive Summary USA "  +  formatted_date</div>'
-
-#html_data = header+ html_data + footer
-
-#with open('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' USA.html', 'w') as f:
- #   f.write(html_data)
-
-
-HTML('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' USA.html').write_pdf('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' USA.pdf')
+#HTML('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' USA.html').write_pdf('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' USA.pdf')
 
