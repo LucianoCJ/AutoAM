@@ -19,9 +19,10 @@ import re
 import datetime
 from xlsx2html import xlsx2html
 from weasyprint import HTML
+from bs4 import BeautifulSoup
+import requests
 
 ##############################################################
-
 
 # Obtener la fecha del próximo domingo en curso
 today = datetime.date.today()
@@ -32,9 +33,12 @@ before_sunday = today - datetime.timedelta(days=today.weekday() + 1)
 #before_sunday = today - datetime.timedelta(days=(6-today.weekday()-7)%7)
 
 # Dar formato a la fecha como mes-día-año
-formatted_date = next_sunday.strftime("%b %dth, %Y")
-formatted_date2 = next_sunday.strftime("%b %dth")
-formatted_date3 = before_sunday.strftime("%b %dth")
+formatted_date = today.strftime("%b %d, %Y").replace("{0:0>2}".format(today.day), str(today.day) + ("th" if 11<= today.day <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(today.day % 10, 'th')))
+formatted_date2 = next_sunday.strftime("%b %d").replace("{0:0>2}".format(next_sunday.day), str(next_sunday.day) + ("th" if 11<= next_sunday.day <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(next_sunday.day % 10, 'th')))
+
+formatted_date3 = before_sunday.strftime("%b %d").replace("{0:0>2}".format(before_sunday.day), str(before_sunday.day) + ("th" if 11<= before_sunday.day <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(before_sunday.day % 10, 'th')))
+
+
 #Fecha del archivo
 formatted_date4 = next_sunday.strftime("%b%d%Y")
 
@@ -107,34 +111,8 @@ for row_num, row_data in enumerate(df.values, 2):
 
 for idx, value in enumerate(ws.iter_rows(),2):
     ws.row_dimensions[idx].height = 7.5
-
-
-
-
-
-
-# Cambiar el color de la celda A1 a rojo
-
-#fill = PatternFill(start_color='808080', end_color='FFFFFF', fill_type='solid')
-
-# Iterar sobre todas las filas y aplicar el formato de relleno al patrón especificado
-#for row in ws.iter_rows():
- #   if row[0].value == 'TOTAL':
-  #      cell_font = Font(bold = True)
-   #     for cell in row:
-    #        cell.fill = fill
-
-#color1 = 'BFBFBF' COLOR DE LA CABECERA
-
-
-# Seleccionar las celdas que se van a ajustar
-#cell_range = ws['I1:M1']
-
-# Ajustar el ancho de las columnas para que el texto quepa
-#for row in cell_range:
- #   for cell in row:
-  #      ws.column_dimensions[cell.column_letter].width = len(str(cell.value))
-
+for idx, value in enumerate(ws.iter_rows(),3571):
+    ws.row_dimensions[idx].height = 7.5
 
 # definir los colores para los renglones
 color1 = 'F2F2F2'
@@ -208,22 +186,6 @@ fill = PatternFill(start_color='BFBFBF', end_color='BFBFBF', fill_type='solid')
 for cell in ws[1]:
     cell.fill = fill    #Agrego el color de relleno en el renglon 1
 
-
-# Buscar la celda que contiene la palabra "TOTAL"
-#for fila in ws.rows:
- #   for celda in fila:
-  #      if celda.value == 'TOTAL':
-            # Obtener la fila donde se encuentra la celda
-   #         fila_total = celda.row
-            # Poner el texto en negrita en toda la fila
-    #        for celda_en_fila in ws[f'A{fila_total}:Z{fila_total}']:
-     #           for celda_individual in celda_en_fila:
-      #              celda_individual.font = openpyxl.styles.Font(bold=True)
-
-
-
-
-
 #Convirtiendo a Decimales
 # Selecciona la columna que deseas convertir (por ejemplo, columna A)
 columna = ws['O']
@@ -254,9 +216,12 @@ alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
          #Copia las celdas de la primera fila a la fila actual
         #for j in range(1, num_cols + 1 ):
 for max_row in range(2, num_rows + 1):
-    if (max_row - 1) % 44 == 0: 
+    if (max_row - 1) % 70 == 0 or max_row == num_rows:
         # Inserta una nueva fila en la parte superior de la página
+        if max_row == num_rows:
+            max_row += 1
         ws.insert_rows(max_row)
+        ws.row_dimensions[max_row].height = 17.25
         for col_num in range(1, num_cols + 1):
             cell = ws.cell(row=max_row, column=col_num)
             cell_name =get_column_letter(col_num) + '1'
@@ -298,8 +263,55 @@ ws.delete_cols(num_columna17)
 ws.delete_cols(num_columna18)
 ws.delete_cols(num_columna19)
 
+# Guardar el archivo con modificación de scale al 110%
+ws.page_setup.scale = 110
+
 # Guardar el archivo
 wb.save('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.xlsx')
 
+#Pasar el formato a html
 xlsx2html('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.xlsx', 'OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.html')
+
+#Modificar el codigo html para ajustarlo al formato
+with open('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.html', "r") as f:
+    text = f.read()
+soup = BeautifulSoup(text, "html.parser")
+new_div = soup.new_tag("style")
+new_div.string = " table {font-family: Calibri; transform: scale(0.9,1)} @page{size: Letter;} div.header {display: block; text-align: center; position: running(header); font-family: Calibri; transform: scale(.93, 1);} div.footer { display: block; text-align: left; position: running(footer); font-family: Calibri; transform: scale(.93, 1); } @page { @top-center { content: element(header) }} @page { @bottom-left { content: element(footer) }}"
+soup.html.insert(1, new_div)
+
+new_divH = soup.new_tag("div")
+soup.html.body.insert(1, new_divH)
+soup.select('div')[0]['class'] = 'header'
+
+new_divH1 = soup.new_tag("h1")
+new_divH1.string = "OAG Schedule Competitive Summary USA"
+soup.html.body.div.insert(1, new_divH1)
+soup.select('h1')[0]['style'] = 'font-size: 19.0px; font-weight: normal;'
+
+new_divH2 = soup.new_tag("p")
+new_divH2.string = "Sunday " + formatted_date
+soup.html.body.div.insert(2, new_divH2)
+soup.select('p')[0]['style'] = 'font-size: 13.0px'
+
+new_divF = soup.new_tag("div")
+new_divF.string ="Prev Snap:  " + formatted_date3 + " New Snap: " + formatted_date2
+soup.html.body.insert(2, new_divF)
+soup.select('div')[1]['class'] = 'footer'
+soup.select('div')[1]['style'] = 'font-size: 10.0px'
+
+for link in soup.findAll('td'):
+    link['style'] = link['style'].replace('font-size: 6.0px','font-size: 9.0px')   
+
+for link in soup.findAll('td'):
+    link['style'] = link['style'].replace('font-size: 11.0px','font-size: 5.0px')
+    link['style'] = link['style'].replace("background-color: #FFFFFF;border-bottom: none;border-collapse: collapse;border-left-color: #BFBFBF;border-left-style: solid;border-left-width: 1px;border-right-color: #F2F2F2;border-right-style: solid;border-right-width: 1px;border-top: none;font-size: 5.0px;height: 7.5pt","background-color: #FFFFFF;border-bottom: none;border-collapse: collapse;border-left-color: #BFBFBF;border-left-style: solid;border-left-width: 1px;border-right-color: #F2F2F2;border-right-style: solid;border-right-width: 1px;border-top: none;font-size: 5.0px;height: 5.7pt;")    
+    link['style'] = link['style'].replace("background-color: #FFFFFF;border-bottom: none;border-collapse: collapse;border-left: none;border-right-color: #F2F2F2;border-right-style: solid;border-right-width: 1px;border-top: none;font-size: 5.0px;height: 7.5pt","background-color: #FFFFFF;border-bottom: none;border-collapse: collapse;border-left: none;border-right-color: #F2F2F2;border-right-style: solid;border-right-width: 1px;border-top: none;font-size: 5.0px;height: 5.7pt")
+    link['style'] = link['style'].replace("background-color: #FFFFFF;border-bottom: none;border-collapse: collapse;border-left: none;border-right-color: #BFBFBF;border-right-style: solid;border-right-width: 1px;border-top: none;font-size: 5.0px;height: 7.5pt","background-color: #FFFFFF;border-bottom: none;border-collapse: collapse;border-left: none;border-right-color: #BFBFBF;border-right-style: solid;border-right-width: 1px;border-top: none;font-size: 5.0px;height: 5.7pt")
+
+
+with open('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.html', "w") as f:
+    f.write(str(soup))
+
+#Exportar html a pdf
 HTML('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.html').write_pdf('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.pdf')
