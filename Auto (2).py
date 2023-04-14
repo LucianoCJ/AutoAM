@@ -276,7 +276,7 @@ with open('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.ht
     text = f.read()
 soup = BeautifulSoup(text, "html.parser")
 new_div = soup.new_tag("style")
-new_div.string = " table {font-family: Calibri; transform: scale(0.9,1)} @page{size: Letter;} div.header {display: block; text-align: center; position: running(header); font-family: Calibri; transform: scale(.93, 1);} div.footer { display: block; text-align: left; position: running(footer); font-family: Calibri; transform: scale(.93, 1); } @page { @top-center { content: element(header) }} @page { @bottom-left { content: element(footer) }}"
+new_div.string = " table {font-family: Calibri; transform: scale(0.9,1)} @page{size: Letter;} div.header {display: block; text-align: center; position: running(header); font-family: Calibri; transform: scale(.93, 1);} div.footer { display: block; text-align: left; position: running(footer); font-family: Calibri; transform: scale(.93, 1); } @page { @top-center { content: element(header) }} @page { @bottom-left { content: element(footer) }} @page {@bottom-right{content: counter(page)' - 'counter(pages); font-family: Calibry; font-size: 10.0px; margin-right: -55px;}}"
 soup.html.insert(1, new_div)
 
 new_divH = soup.new_tag("div")
@@ -297,7 +297,7 @@ new_divF = soup.new_tag("div")
 new_divF.string ="Prev Snap:  " + formatted_date3 + " New Snap: " + formatted_date2
 soup.html.body.insert(2, new_divF)
 soup.select('div')[1]['class'] = 'footer'
-soup.select('div')[1]['style'] = 'font-size: 10.0px'
+soup.select('div')[1]['style'] = 'font-size: 10.0px; margin-left: -55px;'
 
 for link in soup.findAll('td'):
     link['style'] = link['style'].replace('font-size: 6.0px','font-size: 9.0px')   
