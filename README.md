@@ -41,4 +41,11 @@ Latest version: 58.1 Publicación: 20 mar 2023
 pip install weasyprint
 ```
 
+* beautifulsoup4 4.12.2
+
+```bash
+pip install beautifulsoup4
+```
+
+
 
