@@ -47,5 +47,7 @@ pip install weasyprint
 pip install beautifulsoup4
 ```
 
-
-
+* requests 2.28.2
+```bash
+pip install requests
+```
