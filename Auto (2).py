@@ -1,19 +1,13 @@
 import pandas as pd 
-#import openpyxl
 from openpyxl import Workbook 
 from openpyxl.styles import Font, Alignment 
 from openpyxl.styles import PatternFill
 from openpyxl.styles import Border, Side
-#from openpyxl import load_workbook
-#from openpyxl.worksheet.page import PageMargins
 from openpyxl.utils import get_column_letter
-#from reportlab.lib.pagesizes import letter
-#from reportlab.lib.units import inch
-#from reportlab.pdfgen import canvas
 from openpyxl.chart import ScatterChart, Reference, Series
 from openpyxl.utils import range_boundaries
 from openpyxl.utils.cell import column_index_from_string
-#from openpyxl.worksheet.pagebreak import Break
+from openpyxl.worksheet.page import PageMargins
 import re
 import datetime
 from xlsx2html import xlsx2html
@@ -32,19 +26,19 @@ before_sunday = today - datetime.timedelta(days=today.weekday() + 1)
 #before_sunday = today - datetime.timedelta(days=(6-today.weekday()-7)%7)
 
 # Dar formato a la fecha como mes-día-año
-formatted_date = today.strftime("%b %d, %Y").replace("{0:0>2}".format(today.day), str(today.day) + ("th" if 11<= today.day <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(today.day % 10, 'th')))
-formatted_date2 = next_sunday.strftime("%b %d").replace("{0:0>2}".format(next_sunday.day), str(next_sunday.day) + ("th" if 11<= next_sunday.day <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(next_sunday.day % 10, 'th')))
+formatted_date = today.strftime("%b %d, %Y").replace("{0:0>2}".format(today.day), str(today.day) + ("th" if 11<= today.day <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(today.day % 10, 'th')),1)
+formatted_date2 = next_sunday.strftime("%b %d").replace("{0:0>2}".format(next_sunday.day), str(next_sunday.day) + ("th" if 11<= next_sunday.day <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(next_sunday.day % 10, 'th')),1)
 
-formatted_date3 = before_sunday.strftime("%b %d").replace("{0:0>2}".format(before_sunday.day), str(before_sunday.day) + ("th" if 11<= before_sunday.day <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(before_sunday.day % 10, 'th')))
+formatted_date3 = before_sunday.strftime("%b %d").replace("{0:0>2}".format(before_sunday.day), str(before_sunday.day) + ("th" if 11<= before_sunday.day <= 13 else {1: 'st', 2: 'nd', 3: 'rd'}.get(before_sunday.day % 10, 'th')),1)
 
 
 #Fecha del archivo
 formatted_date4 = next_sunday.strftime("%b%d%Y")
 
 ############################################################
-
+originFile = 'ReporteOAGUS_20230312.csv'
 # Leer el archivo CSV
-df = pd.read_csv('ReporteOAGUS_20230312.csv', header = None)
+df = pd.read_csv(originFile, header = None)
 
 # Crear un nuevo libro de trabajo de Excel
 wb = Workbook()
@@ -67,7 +61,15 @@ ws.column_dimensions['K'].width = 4.18     #COLUMNA 8
 ws.column_dimensions['L'].width = 5.32     #COLUMNA 9
 ws.column_dimensions['M'].width = 6.04     #COLUMNA 10
 
+# Definiendo los nuevos margenes modificar los margenes en pulgadas a cm.
+nuevos_margenes = PageMargins(left = 0.23622047244094, right = 0.23622047244094, top = 0.86614173228346, bottom = 0.74803149606299, header = 0.31496062992126, footer = 0.31496062992126)
 
+# Actualizando los margenes de la hoja de trabajo
+ws.page_margins = nuevos_margenes
+
+# Centrar los márgenes horizontal y verticalmente y activa las opciones de impresión
+ws.print_options.horizontalCentered = True
+ws.print_options.verticalCentered = True
 
 # Establecer la altura deseada en la fila y columna especificada
 ws.row_dimensions[1].height = 17.25
@@ -79,7 +81,7 @@ cell_font = Font(name='Calibri', size=6)
 cell_alignment = Alignment(horizontal='left', vertical='center')
 
 # Crear una lista con los nombres de las cabeceras
-cabeceras = ['CA', 'Market', 'Ind AM', 'Region', 'Month', 'Chg', 'Prev Ops', 'New Ops', 'Ops Chg', 'Prev Seat', 'New Seat', 'Sea Chg', '%_Seat Chg']
+cabeceras = ['CA', 'Market', 'Ind AM', 'Region', 'Month', 'Chg', 'Prev Ops', 'New Ops', 'Ops Chg', 'Prev Seat', 'New Seat', 'Seat Chg', '%_Seat Chg']
 
 headers = cabeceras                             #Indico el número de columna a iniciar las cabeceras.
 for col_num, header_title in enumerate(headers, 3):
@@ -107,11 +109,13 @@ for row_num, row_data in enumerate(df.values, 2):
     if str(ws.cell(row=row_num, column=4).value) == 'nan':
         ws.delete_rows(row_num)
         
-
+#Definir altura de las celdas
 for idx, value in enumerate(ws.iter_rows(),2):
     ws.row_dimensions[idx].height = 7.5
-for idx, value in enumerate(ws.iter_rows(),3571):
+for idx, value in enumerate(ws.iter_rows(),ws.max_row):
     ws.row_dimensions[idx].height = 7.5
+    if idx >= ws.max_row+int(ws.max_row/79)+1:
+        break
 
 # definir los colores para los renglones
 color1 = 'F2F2F2'
@@ -151,31 +155,31 @@ columnas = ['C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N']
 mnormal = Side(style = 'thin', color = 'F2F2F2')
 
 # Pintar los bordes verticales interiores
-for idx, value in enumerate(columnas,0):
-    for idxcelda, celda in enumerate(ws[columnas[idx]],0):
-        if idxcelda != 0:
-            celda.border = Border(right = mnormal)
+#for idx, value in enumerate(columnas,0):
+#    for idxcelda, celda in enumerate(ws[columnas[idx]],0):
+#        if idxcelda != 0:
+#            celda.border = Border(right = mnormal)
 
 # Pintar los bordes verticales exteriores
-for idx, celda in enumerate(columnaP,1):
-    if idx == 1:
-        celda.border = Border(left = mexterior)
-    else:
-        celda.border = Border(left = mexterior, right = mnormal)
-for celda in columnaU:
-    celda.border = Border(right = mexterior)
+#for idx, celda in enumerate(columnaP,1):
+#    if idx == 1:
+#        celda.border = Border(left = mexterior)
+#    else:
+#        celda.border = Border(left = mexterior, right = mnormal)
+#for celda in columnaU:
+#    celda.border = Border(right = mexterior)
 
 #Pintar los bordes totales
 
-for idx, row in enumerate(ws.iter_rows(),1):
-    if str(ws.cell(row=idx, column=4).value) == 'TOTAL':
-        for idxcell, celda in enumerate(row,1):
-            if re.search("Cell 'Sheet'.C", str(celda)):
-                celda.border = Border(top = mnormal, bottom = mnormal, left = mexterior, right = mnormal)
-            elif re.search("Cell 'Sheet'.O", str(celda)):
-                celda.border = Border(top = mnormal, bottom = mnormal, left = mnormal, right = mexterior)
-            else:
-                celda.border = Border(top = mnormal, bottom = mnormal, left = mnormal, right = mnormal)
+#for idx, row in enumerate(ws.iter_rows(),1):
+#    if str(ws.cell(row=idx, column=4).value) == 'TOTAL':
+#        for idxcell, celda in enumerate(row,1):
+#            if re.search("Cell 'Sheet'.C", str(celda)):
+#                celda.border = Border(top = mnormal, bottom = mnormal, left = mexterior, right = mnormal)
+#            elif re.search("Cell 'Sheet'.O", str(celda)):
+#                celda.border = Border(top = mnormal, bottom = mnormal, left = mnormal, right = mexterior)
+#            else:
+#                celda.border = Border(top = mnormal, bottom = mnormal, left = mnormal, right = mnormal)
 
 
 # Establecer color de relleno para los encabezados
@@ -214,11 +218,9 @@ alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
     #if (i - 1) % n == 0:
          #Copia las celdas de la primera fila a la fila actual
         #for j in range(1, num_cols + 1 ):
-for max_row in range(2, num_rows + 1):
-    if (max_row - 1) % 70 == 0 or max_row == num_rows:
+for max_row in range(2, num_rows + 35): #el 35 es un numero arbitrario para que aparezca la cabecera en la ultima pagina de todos los archivos
+    if (max_row - 1) % 79 == 0:
         # Inserta una nueva fila en la parte superior de la página
-        if max_row == num_rows:
-            max_row += 1
         ws.insert_rows(max_row)
         ws.row_dimensions[max_row].height = 17.25
         for col_num in range(1, num_cols + 1):
@@ -228,7 +230,10 @@ for max_row in range(2, num_rows + 1):
             header_cell = ws[cell_name]
             cell.value = header_cell.value
             cell.font = font
-            cell.alignment = alignment
+            if col_num <= 8:
+                cell.alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+            else:
+                cell.alignment = alignment
             cell.fill = fill    #Agrego el color de relleno en el renglon 1
 
 
@@ -238,7 +243,7 @@ for max_row in range(2, num_rows + 1):
 #hf = HeaderFooter()
 #hf.center_header.text = "Encabezado"
 #hf.center_footer.text = "Pie de página"
-ws.oddHeader.center.text = "OAG Schedule Competitive Summary US " + '\n&"Calibri"&8Sunday ' +  formatted_date
+ws.oddHeader.center.text = "OAG Schedule Competitive Summary USA " + '\n&"Calibri"&8Sunday ' +  formatted_date
 ws.oddHeader.center.size = 14
 ws.oddHeader.center.font = "Calibri,Bold"
 
@@ -265,18 +270,25 @@ ws.delete_cols(num_columna19)
 # Guardar el archivo con modificación de scale al 110%
 ws.page_setup.scale = 110
 
+#Cambiar la region en el nombre del archivo dependiendo del archivo de origen
+region=''
+if re.match("^ReporteOAGLATAM",originFile):
+    region = " LATAM"
+elif re.match("^ReporteOAGUS",originFile):
+    region = " USA"
+
 # Guardar el archivo
-wb.save('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.xlsx')
+wb.save('OAG Schedule Competitive Summary Sunday, ' + formatted_date + region + ' .xlsx')
 
 #Pasar el formato a html
-xlsx2html('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.xlsx', 'OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.html')
+xlsx2html('OAG Schedule Competitive Summary Sunday, ' + formatted_date + region + ' .xlsx', 'OAG Schedule Competitive Summary Sunday, ' + formatted_date + region + ' .html')
 
 #Modificar el codigo html para ajustarlo al formato
-with open('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.html', "r") as f:
+with open('OAG Schedule Competitive Summary Sunday, ' + formatted_date + region + ' .html', "r") as f:
     text = f.read()
 soup = BeautifulSoup(text, "html.parser")
 new_div = soup.new_tag("style")
-new_div.string = " table {font-family: Calibri; transform: scale(0.9,1)} @page{size: Letter;} div.header {display: block; text-align: center; position: running(header); font-family: Calibri; transform: scale(.93, 1);} div.footer { display: block; text-align: left; position: running(footer); font-family: Calibri; transform: scale(.93, 1); } @page { @top-center { content: element(header) }} @page { @bottom-left { content: element(footer) }} @page {@bottom-right{content: counter(page)' - 'counter(pages); font-family: Calibry; font-size: 10.0px; margin-right: -55px;}}"
+new_div.string = " table {font-family: Calibri; transform: scale(0.85,1); margin-left: auto; margin-right: auto;} @page{size: 8.3in 11.8in;} div.header {display: block; text-align: center; position: running(header); font-family: Calibri; transform: scale(1, 1);} div.footer { display: block; text-align: left; position: running(footer); font-family: Calibri; transform: scale(1, 1); } @page { @top-center { content: element(header) }} @page { @bottom-left { content: element(footer) }} @page {@bottom-right{content: counter(page)' - 'counter(pages); font-family: Calibry; font-size: 10.0px; margin-right: -55px;}}"
 soup.html.insert(1, new_div)
 
 new_divH = soup.new_tag("div")
@@ -284,7 +296,7 @@ soup.html.body.insert(1, new_divH)
 soup.select('div')[0]['class'] = 'header'
 
 new_divH1 = soup.new_tag("h1")
-new_divH1.string = "OAG Schedule Competitive Summary USA"
+new_divH1.string = "OAG Schedule Competitive Summary " + region
 soup.html.body.div.insert(1, new_divH1)
 soup.select('h1')[0]['style'] = 'font-size: 19.0px; font-weight: normal;'
 
@@ -293,6 +305,7 @@ new_divH2.string = "Sunday " + formatted_date
 soup.html.body.div.insert(2, new_divH2)
 soup.select('p')[0]['style'] = 'font-size: 13.0px'
 
+
 new_divF = soup.new_tag("div")
 new_divF.string ="Prev Snap:  " + formatted_date3 + " New Snap: " + formatted_date2
 soup.html.body.insert(2, new_divF)
@@ -300,17 +313,19 @@ soup.select('div')[1]['class'] = 'footer'
 soup.select('div')[1]['style'] = 'font-size: 10.0px; margin-left: -55px;'
 
 for link in soup.findAll('td'):
-    link['style'] = link['style'].replace('font-size: 6.0px','font-size: 9.0px')   
-
-for link in soup.findAll('td'):
+    link['style'] = link['style'].replace('font-size: 6.0px','font-size: 9.0px') 
     link['style'] = link['style'].replace('font-size: 11.0px','font-size: 5.0px')
     link['style'] = link['style'].replace("background-color: #FFFFFF;border-bottom: none;border-collapse: collapse;border-left-color: #BFBFBF;border-left-style: solid;border-left-width: 1px;border-right-color: #F2F2F2;border-right-style: solid;border-right-width: 1px;border-top: none;font-size: 5.0px;height: 7.5pt","background-color: #FFFFFF;border-bottom: none;border-collapse: collapse;border-left-color: #BFBFBF;border-left-style: solid;border-left-width: 1px;border-right-color: #F2F2F2;border-right-style: solid;border-right-width: 1px;border-top: none;font-size: 5.0px;height: 5.7pt;")    
     link['style'] = link['style'].replace("background-color: #FFFFFF;border-bottom: none;border-collapse: collapse;border-left: none;border-right-color: #F2F2F2;border-right-style: solid;border-right-width: 1px;border-top: none;font-size: 5.0px;height: 7.5pt","background-color: #FFFFFF;border-bottom: none;border-collapse: collapse;border-left: none;border-right-color: #F2F2F2;border-right-style: solid;border-right-width: 1px;border-top: none;font-size: 5.0px;height: 5.7pt")
     link['style'] = link['style'].replace("background-color: #FFFFFF;border-bottom: none;border-collapse: collapse;border-left: none;border-right-color: #BFBFBF;border-right-style: solid;border-right-width: 1px;border-top: none;font-size: 5.0px;height: 7.5pt","background-color: #FFFFFF;border-bottom: none;border-collapse: collapse;border-left: none;border-right-color: #BFBFBF;border-right-style: solid;border-right-width: 1px;border-top: none;font-size: 5.0px;height: 5.7pt")
+    if "bold;height: 17.25pt;text-align: " in link['style']:
+        link['style'] += "; word-spacing: 20px; line-height: 130%;"
+    link['style'] += "; transform: scale(1.2,1);"
+    if not (re.match('^Sheet!M', link['id'])):
+        link['style'] += " padding-right: 9px;"
 
-
-with open('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.html', "w") as f:
-    f.write(str(soup))
+with open('OAG Schedule Competitive Summary Sunday, ' + formatted_date + region + ' .html', "w") as f:
+    f.write(soup.prettify(formatter="html"))
 
 #Exportar html a pdf
-HTML('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.html').write_pdf('OAG Schedule Competitive Summary Sunday, ' + formatted_date + ' US.pdf')
+HTML('OAG Schedule Competitive Summary Sunday, ' + formatted_date + region + ' .html').write_pdf('OAG Schedule Competitive Summary Sunday, ' + formatted_date + region + ' .pdf')
